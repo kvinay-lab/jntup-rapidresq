@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResQ-AI — Emergency Response System</title>
+  <meta name="description" content="ResQ-AI: AI-powered emergency response coordination. Real-time report classification, incident deduplication, and situational awareness for Chennai emergency responders." />
+  <meta name="robots" content="noindex" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     APP SHELL
+     ═══════════════════════════════════════════════════ -->
+<div class="app-shell">
+
+  <!-- Mobile nav overlay -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+
+    <!-- Logo / Brand -->
+    <div class="sidebar-logo">
+      <div class="logo-icon" aria-hidden="true">🚨</div>
+      <div class="logo-text">
+        <strong>ResQ-AI</strong>
+        <span>Emergency Response</span>
+        <div class="demo-badge" id="data-mode-badge">LIVE</div>
+      </div>
+    </div>
+
+    <!-- 🆘 Report Emergency CTA -->
+    <div style="padding:0 12px 6px;">
+      <button class="btn btn-primary w-full" id="report-emergency-btn"
+        onclick="ReportModal.open()" style="gap:8px;font-size:13px;font-weight:700;">
+        🆘 Report Emergency
+      </button>
+    </div>
+
+    <!-- 📋 Raise a Complaint CTA -->
+    <div style="padding:0 12px 12px;">
+      <button class="btn w-full" id="raise-complaint-btn"
+        onclick="ComplaintModal.open()"
+        style="gap:8px;font-size:12px;font-weight:600;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.35);color:#f5c842;">
+        📋 Raise a Complaint
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <ul class="sidebar-nav" role="list">
+      <li><span class="nav-section-label">Main</span></li>
+
+      <li>
+        <button class="nav-item active" data-page="dashboard" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">📊</span>
+          Dashboard
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" data-page="incidents">
+          <span class="nav-icon" aria-hidden="true">🗂</span>
+          Incidents
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" data-page="reports">
+          <span class="nav-icon" aria-hidden="true">📡</span>
+          Live Reports
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" data-page="processing">
+          <span class="nav-icon" aria-hidden="true">🤖</span>
+          AI Processing
+        </button>
+      </li>
+
+      <li><span class="nav-section-label">Situational</span></li>
+
+      <li>
+        <button class="nav-item" data-page="map">
+          <span class="nav-icon" aria-hidden="true">🗺</span>
+          Map
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" data-page="analytics">
+          <span class="nav-icon" aria-hidden="true">📈</span>
+          Analytics
+        </button>
+      </li>
+
+      <li><span class="nav-section-label">System</span></li>
+
+      <li>
+        <button class="nav-item" data-page="settings">
+          <span class="nav-icon" aria-hidden="true">⚙️</span>
+          Settings
+        </button>
+      </li>
+    </ul>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="system-status-mini">
+        <div class="status-dot online" id="sb-conn-dot" title="Supabase"></div>
+        <span id="sb-conn-label">Connecting…</span>
+      </div>
+      <div class="system-status-mini mt-2">
+        <div class="status-dot online" title="AI Processing Online"></div>
+        <span>AI Processing Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open navigation menu">☰</button>
+        <span class="page-title" id="page-title">📊 Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span id="topbar-data-badge" class="badge badge-noise" style="font-size:10px;">⚠️ Demo Mode</span>
+        <span id="topbar-clock" class="text-xs text-muted font-mono" style="min-width:60px;text-align:right;"></span>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-area" id="page-area" role="main" aria-live="polite">
+      <!-- Rendered by router -->
+    </main>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-container" id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- Report Modal (injected by reportModal.js — this is a fallback placeholder) -->
+<div id="report-modal-placeholder"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCRIPTS — order: config → data → AI → loader → supabase → app
+     ═══════════════════════════════════════════════════ -->
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<!-- Supabase JS v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- App scripts -->
+<script src="js/config.js"></script>
+<script src="js/mockData.js"></script>
+<script src="js/aiPipeline.js"></script>
+<script src="js/dataLoader.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/supabaseService.js"></script>
+<script src="js/services.js"></script>
+<script src="js/leafletMap.js"></script>
+<script src="js/reportModal.js"></script>
+<script src="js/complaintModal.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
